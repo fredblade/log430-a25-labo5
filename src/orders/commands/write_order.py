@@ -112,12 +112,34 @@ def request_payment_link(order_id, total_amount, user_id):
         "total_amount": total_amount
     }
 
-    # TODO: Requête à POST /payments
-    print("")
-    response_from_payment_service = {}
-
-    if True: # if response.ok
-        print(f"ID paiement: {payment_id}")
+    try:
+        logger.debug(f"Requesting payment for order {order_id}, amount: {total_amount}")
+        
+        response_from_payment_service = requests.post(
+            'http://api-gateway:8080/payments-api/payments',
+            json=payment_transaction,
+            headers={'Content-Type': 'application/json'},
+            timeout=12  # Timeout plus long que KrakenD backend (10s)
+        )
+        
+        if response_from_payment_service.ok:
+            response_data = response_from_payment_service.json()
+            payment_id = response_data.get("payment_id", 0)
+            logger.debug(f"Payment ID received: {payment_id}")
+            print(f"ID paiement: {payment_id}")
+        else:
+            logger.error(f"Payment service error: {response_from_payment_service.status_code} - {response_from_payment_service.text}")
+            print(f"Erreur du service de paiement: {response_from_payment_service.status_code}")
+            
+    except requests.exceptions.Timeout:
+        logger.error(f"Timeout lors de la requête de paiement pour la commande {order_id}")
+        print("Timeout lors de la requête de paiement - service de paiement trop lent")
+    except requests.exceptions.ConnectionError:
+        logger.error(f"Erreur de connexion au service de paiement pour la commande {order_id}")
+        print("Erreur de connexion au service de paiement")
+    except Exception as e:
+        logger.error(f"Erreur inattendue lors de la requête de paiement: {str(e)}")
+        print(f"Erreur lors de la requête de paiement: {str(e)}")
 
     return f"http://api-gateway:8080/payments-api/payments/process/{payment_id}" 
 

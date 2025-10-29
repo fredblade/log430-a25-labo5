@@ -8,25 +8,54 @@
   "endpoints": [
     {
       "endpoint": "/payments-api/payments",
-      "method": "POST", 
+      "method": "POST",
+      "timeout": "15s",
       "backend": [
         {
           "url_pattern": "/payments",
           "host": ["http://payments_api:5009"],
-          "timeout": "5s"
+          "timeout": "10s"
         }
       ]
     },
     {
       "endpoint": "/payments-api/payments/{payment_id}",
-      "method": "POST", 
+      "method": "POST",
+      "timeout": "15s", 
       "backend": [
         {
           "url_pattern": "/payments/process/{payment_id}",
           "host": ["http://payments_api:5009"],
-          "timeout": "5s"
+          "timeout": "10s"
         }
       ]
-    }
+    },
+      {
+      "endpoint": "/store-api/orders",
+      "method": "POST",
+      "backend": [
+        {
+          "url_pattern": "/orders",
+          "host": ["http://store_manager:5000"],
+        }
+      ],
+      "extra_config": {
+        "qos/ratelimit/router": {
+          "max_rate": 10,
+          "every": "1m",
+        }
+      }
+  },
+  {
+    "endpoint": "/store-api/orders",
+    "method": "PUT",
+    "backend": [
+      {
+        "url_pattern": "/orders",
+        "host": ["http://store_manager:5000"],
+      }
+    ]
+  }
   ]
+  
 }
